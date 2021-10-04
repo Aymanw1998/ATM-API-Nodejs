@@ -21,13 +21,14 @@ second: POST /atm/withdrawal:
           }
    
    for cash withrawal
-   the request is : http://localhost:1998/atm/withdrawal
+   
+    the request is : http://localhost:1998/atm/withdrawal
    
    
 therid: POST /admin/currency:
     for deposit money
     
-    the request is : http://localhost:1998/atm/currency
+        the request is : http://localhost:1998/atm/currency
     
     like a : http://localhost:1998/atm/200
     
