@@ -181,6 +181,39 @@ const withdrawal = async (req, res) => {
             if (coin10Count != 0) {
                 Object.assign(coins, { "10": coin10Count })
             }
+
+            const updateAtm = new atmModel({
+                _id: atm._id,
+                atm: {
+                    bills:{
+                        "200": atm.atm.bills["200"] - bill200Count,
+                        "100": atm.atm.bills["100"] - bill100Count,
+                        "50": atm.atm.bills["50"] - bill50Count,
+                        "20": atm.atm.bills["20"] - bill20Count
+                    },
+                    coins:{
+                        "10": atm.atm.coins["10"] - coin10Count,
+                        "5": atm.atm.coins["5"] - coin5Count,
+                        "2": atm.atm.coins["2"] - coin2Count,
+                        "1": atm.atm.coins["1"] - coin1Count,
+                        "0.5": atm.atm.coins["0.5"] - coin05Count,
+                        "0.1": atm.atm.coins["0.1"] - coin01Count,
+                        "0.01": atm.atm.coins["0.01"] - coin001Count
+                    }
+                }
+            });
+            await atmModel.updateOne({ _id: atm._id }, updateAtm)
+            .then(result => {
+                res.status(200).json({
+                    message: "ATM updated successfully!"
+                });
+            })
+            .catch(err =>{
+                res.status(500).json({
+                    err: err
+                })
+            })
+
             res.status(200).json({
                 "result": {
                     "bills": [bills],
