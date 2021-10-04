@@ -4,7 +4,27 @@ const atmModel = require('../models/atmModel');
 const getData = async (req, res) => {
     try {
         const atm = await atmModel.find()
-            .then(data => { res.status(200).json(data) })
+            .then(data => {
+                res.status(200).json({
+                    "all-data": {
+                        "bills": {
+                            "200": data[0].atm.bills["200"],
+                            "100": data[0].atm.bills["100"],
+                            "50": data[0].atm.bills["50"],
+                            "20": data[0].atm.bills["20"],
+                        },
+                        "coins": {
+                            "10": data[0].atm.coins["10"],
+                            "5": data[0].atm.coins["5"],
+                            "2": data[0].atm.coins["2"],
+                            "1": data[0].atm.coins["1"],
+                            "0.5": data[0].atm.coins["05"],
+                            "0.1": data[0].atm.coins["01"],
+                            "0.01": data[0].atm.coins["001"],
+                        }
+                    }
+                })
+            })
             .catch(err => { res.status(400).json(err.message) });
     }
     catch (e) {
@@ -18,8 +38,10 @@ const withdrawal = async (req, res) => {
         const amount = body.amount
         const array = (amount).toString().split('.');
 
-        let amount1 = Number(array[0]);
-        let amount2 = amount - amount1;
+        if (array[1].length == 1 && array[1][0] != "0")
+            amount2 = Number(array[1]) * 10;
+        else amount2 = Number(array[1])
+
 
         let atmM = await atmModel.find();
         if (!atmM) {
@@ -108,41 +130,41 @@ const withdrawal = async (req, res) => {
 
             amount1 -= coin1Count * 1;
 
-            let coin05Count = (amount2 / 0.5) - (amount2 % 0.5 / 0.5)
-            if (coin05Count <= atm.atm.coins["0.5"]) {
-                atm.atm.coins["0.5"] -= coin05Count;
+            let coin05Count = (amount2 / 50) - (amount2 % 50 / 50)
+            if (coin05Count <= atm.atm.coins["05"]) {
+                atm.atm.coins["05"] -= coin05Count;
             } else {
-                coin05Count = atm.atm.coins["0.5"];
-                atm.atm.coins["0.5"] = 0;
+                coin05Count = atm.atm.coins["05"];
+                atm.atm.coins["05"] = 0;
             }
 
-            amount2 -= coin05Count * 0.5;
+            amount2 -= coin05Count * 50;
 
-            let coin01Count = (amount2 / 0.1) - (amount2 % 0.1 / 0.1)
-            if (coin01Count <= atm.atm.coins["0.1"]) {
-                atm.atm.coins["0.1"] -= coin01Count;
+            let coin01Count = (amount2 / 10) - (amount2 % 10 / 10)
+            if (coin01Count <= atm.atm.coins["01"]) {
+                atm.atm.coins["01"] -= coin01Count;
             } else {
-                coin01Count = atm.atm.coins["0.1"];
-                atm.atm.coins["0.1"] = 0;
+                coin01Count = atm.atm.coins["01"];
+                atm.atm.coins["01"] = 0;
             }
 
-            amount2 -= coin01Count * 0.1;
+            amount2 -= coin01Count * 10;
 
-            let coin001Count = (amount2 / 0.01) - (amount2 % 0.01 / 0.01)
-            if (coin001Count <= atm.atm.coins["0.01"]) {
-                atm.atm.coins["0.01"] -= coin001Count;
+            let coin001Count = (amount2 / 1) - (amount2 % 1 / 1)
+            if (coin001Count <= atm.atm.coins["001"]) {
+                atm.atm.coins["001"] -= coin001Count;
             } else {
-                coin001Count = atm.atm.coins["0.01"];
-                atm.atm.coins["0.01"] = 0;
+                coin001Count = atm.atm.coins["001"];
+                atm.atm.coins["001"] = 0;
             }
 
-            amount2 -= coin001Count * 0.01;
+            amount2 -= coin001Count * 1;
             let bills = {};
             let coins = {};
 
             let sumCoins = coin10Count + coin5Count + coin2Count + coin1Count + coin05Count + coin01Count + coin001Count;
             //sumCoins = 51
-            if(sumCoins > 50)
+            if (sumCoins > 50)
                 throw new Error("TooMuchCoinsException")
 
             if (bill20Count > 0) {
@@ -185,40 +207,40 @@ const withdrawal = async (req, res) => {
             const updateAtm = new atmModel({
                 _id: atm._id,
                 atm: {
-                    bills:{
-                        "200": atm.atm.bills["200"] - bill200Count,
-                        "100": atm.atm.bills["100"] - bill100Count,
-                        "50": atm.atm.bills["50"] - bill50Count,
-                        "20": atm.atm.bills["20"] - bill20Count
+                    bills: {
+                        "200": atm.atm.bills["200"],
+                        "100": atm.atm.bills["100"],
+                        "50": atm.atm.bills["50"],
+                        "20": atm.atm.bills["20"]
                     },
-                    coins:{
-                        "10": atm.atm.coins["10"] - coin10Count,
-                        "5": atm.atm.coins["5"] - coin5Count,
-                        "2": atm.atm.coins["2"] - coin2Count,
-                        "1": atm.atm.coins["1"] - coin1Count,
-                        "0.5": atm.atm.coins["0.5"] - coin05Count,
-                        "0.1": atm.atm.coins["0.1"] - coin01Count,
-                        "0.01": atm.atm.coins["0.01"] - coin001Count
+                    coins: {
+                        "10": atm.atm.coins["10"],
+                        "5": atm.atm.coins["5"],
+                        "2": atm.atm.coins["2"],
+                        "1": atm.atm.coins["1"],
+                        "'05'": atm.atm.coins["0.5"],
+                        "'01'": atm.atm.coins["0.1"],
+                        "'001'": atm.atm.coins["0.01"]
                     }
                 }
             });
             await atmModel.updateOne({ _id: atm._id }, updateAtm)
-            .then(result => {
-                res.status(200).json({
-                    message: "ATM updated successfully!"
-                });
-            })
-            .catch(err =>{
-                res.status(500).json({
-                    err: err
+                .then(result => {
                 })
-            })
-
+                .catch(err => {
+                    res.status(500).json({
+                        err: err
+                    })
+                })
+            let result = {}
+            if (Object.keys(bills).length != 0) {
+                Object.assign(result, { "bills": [bills] })
+            }
+            if (Object.keys(coins).length != 0) {
+                Object.assign(result, { "coins": [coins] })
+            }
             res.status(200).json({
-                "result": {
-                    "bills": [bills],
-                    "coins": [coins]
-                }
+                "result": result
             })
         }
     } catch (e) {
@@ -234,7 +256,10 @@ const adding = async (req, res) => {
     const array = (amount).toString().split('.');
 
     let amount1 = Number(array[0]);
-    let amount2 = amount - amount1;
+    let amount2 = Number(array[1]) * 10;
+    if (array[1].length == 1 && array[1][0] != "0")
+        amount2 = Number(array[1]) * 10;
+    else amount2 = Number(array[1])
 
     let atmM = await atmModel.find();
     if (!atmM) {
@@ -267,46 +292,46 @@ const adding = async (req, res) => {
         let coin1Count = (amount1 / 1) - (amount1 % 1 / 1)
         amount1 -= coin1Count * 1;
 
-        let coin05Count = (amount2 / 0.5) - (amount2 % 0.5 / 0.5)
-        amount2 -= coin05Count * 0.5;
+        let coin05Count = (amount2 / 50) - (amount2 % 50 / 50)
+        amount2 -= coin05Count * 50;
 
-        let coin01Count = (amount2 / 0.1) - (amount2 % 0.1 / 0.1)
-        amount2 -= coin01Count * 0.1;
+        let coin01Count = (amount2 / 10) - (amount2 % 10 / 10)
+        amount2 -= coin01Count * 10;
 
-        let coin001Count = (amount2 / 0.01) - (amount2 % 0.01 / 0.01)
-        amount2 -= coin001Count * 0.01;
+        let coin001Count = (amount2 / 1) - (amount2 % 1 / 1)
+        amount2 -= coin001Count * 1;
 
         const updateAtm = new atmModel({
             _id: atm._id,
             atm: {
-                bills:{
+                bills: {
                     "200": atm.atm.bills["200"] + bill200Count,
                     "100": atm.atm.bills["100"] + bill100Count,
                     "50": atm.atm.bills["50"] + bill50Count,
                     "20": atm.atm.bills["20"] + bill20Count
                 },
-                coins:{
+                coins: {
                     "10": atm.atm.coins["10"] + coin10Count,
                     "5": atm.atm.coins["5"] + coin5Count,
                     "2": atm.atm.coins["2"] + coin2Count,
                     "1": atm.atm.coins["1"] + coin1Count,
-                    "0.5": atm.atm.coins["0.5"] + coin05Count,
-                    "0.1": atm.atm.coins["0.1"] + coin01Count,
-                    "0.01": atm.atm.coins["0.01"] + coin001Count
+                    "05": atm.atm.coins["05"] + coin05Count,
+                    "01": atm.atm.coins["01"] + coin01Count,
+                    "001": atm.atm.coins["001"] + coin001Count
                 }
             }
         });
         await atmModel.updateOne({ _id: atm._id }, updateAtm)
-        .then(result => {
-            res.status(200).json({
-                message: "ATM updated successfully!"
-            });
-        })
-        .catch(err =>{
-            res.status(500).json({
-                err: err
+            .then(result => {
+                res.status(200).json({
+                    message: "ATM updated successfully!"
+                });
             })
-        })
+            .catch(err => {
+                res.status(500).json({
+                    err: err
+                })
+            })
     }
 }
 

@@ -17,9 +17,9 @@ const atmSchema = new Schema({
             "5":{type: Number, default:0},
             "2":{type: Number, default:0},
             "1":{type: Number, default:0},
-            "0.5":{type: Number, default:0},
-            "0.1":{type: Number, default:0},
-            "0.01":{type: Number, default:0}
+            "05":{type: Number, default:0},
+            "01":{type: Number, default:0},
+            "001":{type: Number, default:0}
         }
      }
     
